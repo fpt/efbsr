@@ -23,8 +23,6 @@ parse_get_oauth_token(Req, Code) ->
     {ok, AppId} = application:get_env(efbsr, app_id),
     {ok, AppSecret} = application:get_env(efbsr, app_secret),
     Resp = fb_oauth_access_token(AppId, AppSecret, Code),
-    erlang:display("Resp"),
-    erlang:display(Resp),
     proplists:get_value("access_token", Resp).
 
 
@@ -43,18 +41,19 @@ parse_signed_request(SignedReq) ->
         "HMAC-SHA256" ->
             parse_signed_request_sha256(Sig, ExpSigStr, Conv);
         _ ->
-            error
+            undefined
     end.
 
 parse_signed_request_sha256(Sig, ExpSigStr, Conv) ->
     ExpSig = re:replace(
                 re:replace(
-                    re:replace(ExpSigStr, "\\+", "-", [{return, list}]),
-                    "/", "_", [{return, list}]),
-                "=", "", [{return, list}]),
+                    re:replace(ExpSigStr, "\\+", "-", [{return, list}, global]),
+                    "/", "_", [{return, list}, global]),
+                "=", "", [{return, list}, global]),
+    erlang:display(ExpSig),
     if
         Sig == ExpSig -> Conv;
-        true -> error
+        true -> undefined
     end.
 
 get_app_id() ->
@@ -62,8 +61,8 @@ get_app_id() ->
     AppId.
 
 get_app_secret() ->
-    {ok, AppId} = application:get_env(efbsr, app_secret),
-    AppId.
+    {ok, AppSecret} = application:get_env(efbsr, app_secret),
+    AppSecret.
 
 % private
 
